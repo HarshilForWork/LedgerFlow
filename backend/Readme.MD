@@ -60,11 +60,17 @@ Example:
 
 ```env
 DATABASE_URL=postgresql://<user>:<password>@<host>/<db>?sslmode=require
+JWT_SECRET_KEY=<long-random-secret>
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=30
 ```
 
-Required key:
+Required keys:
 
 - `DATABASE_URL`
+- `JWT_SECRET_KEY`
+- `JWT_ALGORITHM`
+- `JWT_EXPIRE_MINUTES`
 
 The app normalizes this URL to `postgresql+psycopg2://` in the DB session layer.
 
@@ -78,6 +84,7 @@ Current dependencies in `requirements.txt`:
 
 - bcrypt
 - fastapi
+- PyJWT
 - psycopg2-binary
 - pydantic[email]>=2,<3
 - pydantic-settings>=2,<3

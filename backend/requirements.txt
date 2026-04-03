@@ -1,8 +1,10 @@
 bcrypt
 fastapi
+PyJWT
 psycopg2-binary
 pydantic[email]>=2,<3
 pydantic-settings>=2,<3
 python-dotenv
 sqlalchemy
+uvicorn
 
