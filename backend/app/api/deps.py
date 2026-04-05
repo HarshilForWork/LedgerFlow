@@ -62,5 +62,23 @@ def require_permission(permission_name: str) -> Callable[..., Employee]:
 	return permission_dependency
 
 
-__all__ = ["get_current_user", "get_db", "require_permission"]
+def require_any_permission(*permission_names: str) -> Callable[..., Employee]:
+	def permission_dependency(
+		current_user: Employee = Depends(get_current_user),
+		db: Session = Depends(get_db),
+	) -> Employee:
+		for permission_name in permission_names:
+			if user_has_permission(db, current_user, permission_name):
+				return current_user
+		raise forbidden_exception()
+
+	return permission_dependency
+
+
+__all__ = [
+	"get_current_user",
+	"get_db",
+	"require_any_permission",
+	"require_permission",
+]
 

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, require_permission
+from app.api.deps import get_db, require_any_permission
 from app.core.roles import Permissions
 from app.schemas.employee import EmployeeCreate, EmployeeResponse
 from app.schemas.user import UserRoleUpdateRequest, UserStatusUpdateRequest
@@ -22,8 +22,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 	"",
 	response_model=list[EmployeeResponse],
 	dependencies=[
-		Depends(require_permission(Permissions.MANAGE_USERS)),
-		Depends(require_permission(Permissions.VIEW_USERS)),
+		Depends(require_any_permission(Permissions.MANAGE_USERS, "view_users", "view_user"))
 	],
 )
 def list_users_endpoint(db: Session = Depends(get_db)) -> list[EmployeeResponse]:
@@ -35,8 +34,7 @@ def list_users_endpoint(db: Session = Depends(get_db)) -> list[EmployeeResponse]
 	response_model=EmployeeResponse,
 	status_code=status.HTTP_201_CREATED,
 	dependencies=[
-		Depends(require_permission(Permissions.MANAGE_USERS)),
-		Depends(require_permission(Permissions.CREATE_USER)),
+		Depends(require_any_permission(Permissions.MANAGE_USERS, Permissions.CREATE_USER))
 	],
 )
 def create_user_endpoint(
@@ -50,8 +48,13 @@ def create_user_endpoint(
 	"/{user_id}/role",
 	response_model=EmployeeResponse,
 	dependencies=[
-		Depends(require_permission(Permissions.MANAGE_USERS)),
-		Depends(require_permission(Permissions.UPDATE_USER_ROLE)),
+		Depends(
+			require_any_permission(
+				Permissions.MANAGE_USERS,
+				Permissions.UPDATE_USER_ROLE,
+				"update_user",
+			)
+		)
 	],
 )
 def update_user_role_endpoint(
@@ -66,8 +69,13 @@ def update_user_role_endpoint(
 	"/{user_id}/status",
 	response_model=EmployeeResponse,
 	dependencies=[
-		Depends(require_permission(Permissions.MANAGE_USERS)),
-		Depends(require_permission(Permissions.UPDATE_USER_STATUS)),
+		Depends(
+			require_any_permission(
+				Permissions.MANAGE_USERS,
+				Permissions.UPDATE_USER_STATUS,
+				"update_user",
+			)
+		)
 	],
 )
 def update_user_status_endpoint(
