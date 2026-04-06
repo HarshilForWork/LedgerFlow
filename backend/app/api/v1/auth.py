@@ -9,9 +9,12 @@ from app.utils.jwt import create_access_token
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+	"/login",
+	response_model=TokenResponse,
+	summary="Login",
+	description="Authenticate user credentials and return a JWT access token.",
+)
 def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
 	user = authenticate_user(db, payload.email, payload.password)
 	if user is None:

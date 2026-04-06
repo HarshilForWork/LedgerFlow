@@ -63,6 +63,10 @@ DATABASE_URL=postgresql://<user>:<password>@<host>/<db>?sslmode=require
 JWT_SECRET_KEY=<long-random-secret>
 JWT_ALGORITHM=HS256
 JWT_EXPIRE_MINUTES=30
+ENVIRONMENT=development
+DEBUG=false
+LOG_LEVEL=INFO
+RESPONSE_ENVELOPE_DEFAULT=false
 ```
 
 Required keys:
@@ -71,6 +75,13 @@ Required keys:
 - `JWT_SECRET_KEY`
 - `JWT_ALGORITHM`
 - `JWT_EXPIRE_MINUTES`
+
+Optional app keys:
+
+- `ENVIRONMENT` (`development` or `production`)
+- `DEBUG`
+- `LOG_LEVEL` (`CRITICAL`, `ERROR`, `WARNING`, `INFO`, `DEBUG`)
+- `RESPONSE_ENVELOPE_DEFAULT` (set `true` to globally return `{success,message,data}` envelopes)
 
 The app normalizes this URL to `postgresql+psycopg2://` in the DB session layer.
 
@@ -157,6 +168,7 @@ Implemented under `app/models/` with UUID PKs and PostgreSQL UUID columns.
 - `category_id` UUID FK -> categories.id
 - `transaction_date` TIMESTAMP, not null
 - `note` TEXT
+- `is_deleted` BOOLEAN, default false (soft delete flag)
 - `created_at`, `updated_at` TIMESTAMP
 - Check constraint: type in (income, expense)
 
@@ -242,6 +254,94 @@ init_db()
 ```
 
 This creates all SQLAlchemy tables registered on `Base.metadata`.
+
+## API Enhancements
+
+### Pagination
+
+- `GET /api/v1/users`
+- `GET /api/v1/transactions`
+
+Both endpoints now accept:
+
+- `page` (default `1`)
+- `limit` (default `10`, max `100`)
+
+Both endpoints return:
+
+```json
+{
+	"page": 1,
+	"limit": 10,
+	"total": 45,
+	"total_pages": 5,
+	"data": []
+}
+```
+
+### Advanced Transaction Filters
+
+`GET /api/v1/transactions` supports:
+
+- `type`
+- `category_id`
+- `date_from`
+- `date_to`
+- `min_amount`
+- `max_amount`
+- `search` (case-insensitive on `note` and category name)
+
+Legacy query params `start_date` and `end_date` are still accepted as deprecated aliases.
+
+### Soft Delete
+
+- `DELETE /api/v1/transactions/{transaction_id}` now performs a soft delete.
+- Soft-deleted transactions are excluded from list, update, get-by-id, and dashboard aggregates.
+
+### Standardized Responses
+
+- Error responses are returned in a consistent shape:
+
+```json
+{
+	"success": false,
+	"message": "Validation error.",
+	"data": []
+}
+```
+
+- Success envelope shape is available for all JSON endpoints and can be toggled with:
+	- Header: `X-Response-Envelope: true`
+	- Or env var: `RESPONSE_ENVELOPE_DEFAULT=true`
+
+### Global Error Handling
+
+Centralized handlers now standardize:
+
+- `401 Unauthorized`
+- `403 Forbidden`
+- `404 Not Found`
+- `422 Validation errors`
+- fallback `500 Internal server error`
+
+### Logging
+
+Logging now includes:
+
+- Request logs (method, path, status, duration, request id)
+- Error logs for unhandled exceptions
+- Important action logs for login and transaction creation
+
+## Existing DB Migration (Soft Delete)
+
+If your `transactions` table already exists, run this SQL once:
+
+```sql
+ALTER TABLE transactions
+ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE INDEX IF NOT EXISTS ix_transactions_is_deleted ON transactions (is_deleted);
+```
 
 ## Notes
 

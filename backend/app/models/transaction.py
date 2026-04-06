@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+	Boolean,
 	CheckConstraint,
 	Column,
 	DateTime,
@@ -9,6 +10,7 @@ from sqlalchemy import (
 	Numeric,
 	String,
 	Text,
+	text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -29,6 +31,7 @@ class Transaction(Base):
 	category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=False)
 	transaction_date = Column(DateTime, nullable=False)
 	note = Column(Text, nullable=True)
+	is_deleted = Column(Boolean, nullable=False, default=False, server_default=text("false"), index=True)
 	created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 	updated_at = Column(
 		DateTime,

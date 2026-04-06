@@ -24,6 +24,8 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 @router.get(
 	"/summary",
 	response_model=DashboardSummaryResponse,
+	summary="Dashboard summary",
+	description="Return total income, total expense, and net balance for the selected date range.",
 	dependencies=[Depends(require_permission(Permissions.VIEW_DASHBOARD))],
 )
 def dashboard_summary_endpoint(
@@ -39,6 +41,8 @@ def dashboard_summary_endpoint(
 @router.get(
 	"/category-breakdown",
 	response_model=DashboardCategoryBreakdownResponse,
+	summary="Category breakdown",
+	description="Return income and expense totals grouped by category.",
 	dependencies=[Depends(require_permission(Permissions.VIEW_DASHBOARD))],
 )
 def dashboard_category_breakdown_endpoint(
@@ -54,6 +58,8 @@ def dashboard_category_breakdown_endpoint(
 @router.get(
 	"/trends",
 	response_model=DashboardTrendsResponse,
+	summary="Monthly trends",
+	description="Return month-wise income and expense trend totals.",
 	dependencies=[Depends(require_permission(Permissions.VIEW_DASHBOARD))],
 )
 def dashboard_trends_endpoint(

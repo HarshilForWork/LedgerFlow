@@ -17,6 +17,8 @@ def _apply_common_filters(
 	start_date: datetime | None,
 	end_date: datetime | None,
 ):
+	query = query.filter(Transaction.is_deleted.is_(False))
+
 	if start_date and end_date and start_date > end_date:
 		raise HTTPException(
 			status_code=status.HTTP_400_BAD_REQUEST,

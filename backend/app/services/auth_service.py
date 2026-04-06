@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from sqlalchemy.orm import Session, joinedload
@@ -9,6 +10,9 @@ from app.models.role_permission import RolePermission
 from app.utils.common import verify_password
 
 
+logger = logging.getLogger(__name__)
+
+
 def authenticate_user(db: Session, email: str, password: str) -> Employee | None:
 	employee = (
 		db.query(Employee)
@@ -17,11 +21,16 @@ def authenticate_user(db: Session, email: str, password: str) -> Employee | None
 		.first()
 	)
 	if employee is None:
+		logger.warning("Login failed: unknown email | email=%s", email)
 		return None
 	if not verify_password(password, employee.password_hash):
+		logger.warning("Login failed: invalid password | email=%s", email)
 		return None
 	if employee.status == "suspended":
+		logger.warning("Login denied: suspended user | user_id=%s email=%s", employee.id, email)
 		return None
+
+	logger.info("Login succeeded | user_id=%s email=%s", employee.id, email)
 	return employee
 
 

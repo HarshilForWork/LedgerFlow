@@ -1,3 +1,4 @@
+from math import ceil
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -14,8 +15,24 @@ def _employee_query(db: Session):
 	return db.query(Employee).options(joinedload(Employee.role))
 
 
-def list_users(db: Session) -> list[Employee]:
-	return _employee_query(db).order_by(Employee.created_at.desc()).all()
+def list_users(db: Session, page: int = 1, limit: int = 10) -> dict:
+	query = _employee_query(db)
+	total = query.order_by(None).count()
+	items = (
+		query.order_by(Employee.created_at.desc())
+		.offset((page - 1) * limit)
+		.limit(limit)
+		.all()
+	)
+
+	total_pages = ceil(total / limit) if total > 0 else 0
+	return {
+		"page": page,
+		"limit": limit,
+		"total": total,
+		"total_pages": total_pages,
+		"data": items,
+	}
 
 
 def _get_user_or_404(db: Session, user_id: UUID) -> Employee:
